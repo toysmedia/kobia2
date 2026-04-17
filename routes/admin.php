@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\IspPaymentController;
 use App\Http\Controllers\Admin\IspSettingController;
 use App\Http\Controllers\Admin\IspResellerController;
 use App\Http\Controllers\Admin\ConfigurationController;
+use App\Http\Controllers\Admin\OpenvpnConfigurationController;
 
 Route::middleware(['is_installed'])->group(function () {
     
@@ -46,6 +47,7 @@ Route::get('/provision/{token}', [\App\Http\Controllers\Admin\RouterController::
         // Routers
         Route::prefix('isp/routers')->name('isp.routers.')->controller(RouterController::class)->group(function () {
             Route::get('/', 'index')->name('index');
+            Route::get('/statuses', 'statuses')->name('statuses');
             Route::get('/create', 'create')->name('create');
             Route::post('/', 'store')->name('store');
             Route::get('/{router}', 'show')->name('show');
@@ -59,6 +61,15 @@ Route::get('/provision/{token}', [\App\Http\Controllers\Admin\RouterController::
             Route::post('/{router}/test-connection', 'testConnection')->name('test_connection');
             Route::post('/{router}/configure', 'configureRouter')->name('configure');
             Route::post('/{router}/ping-status', 'pingStatus')->name('ping_status');  // <-- ADD THIS
+        });
+
+        Route::prefix('isp/openvpn-configurations')->name('isp.openvpn_configurations.')->controller(OpenvpnConfigurationController::class)->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::post('/', 'store')->name('store');
+            Route::put('/{openvpnConfiguration}', 'update')->name('update');
+            Route::delete('/{openvpnConfiguration}', 'destroy')->name('destroy');
+            Route::post('/{openvpnConfiguration}/test-connection', 'testConnection')->name('test_connection');
+            Route::get('/{openvpnConfiguration}/one-liner', 'oneLiner')->name('one_liner');
         });
 
         // ISP Packages

@@ -152,6 +152,25 @@ php artisan test tests/Feature/Dashboard/
 3. Paste into MikroTik Terminal (Winbox or SSH)
 4. For hotspot: click **"Download Hotspot Files"** → upload ZIP to `/hotspot` on MikroTik
 
+### OpenVPN Configuration Flow
+
+- Use **Admin → ISP → OpenVPN Configurations** to manage OpenVPN client configs.
+- Each row has **Edit / Delete / Configure / Test Connection** actions.
+- **Configure** opens a modal with a one-line MikroTik command that fetches a signed `.rsc` installer.
+- The signed installer fetches `ca.crt`, client `.crt`, and client `.key` via signed URLs and imports them before creating `ovpn-kobia`.
+
+### Router Management Flow
+
+- Router create/edit now only accepts: Name, Connection Type, IP Address, NAS Secret, Port, Notes, Is Active.
+- Connection Type options are strictly **Public IP** and **Through OpenVPN**.
+- Router model/version/domain identity are auto-fetched after successful **Test Connection**.
+- Router index shows cached status (`online` / `offline` / `unreachable`) and includes a **WinBox** action that opens WebFig.
+
+### Queue Worker
+
+- Router status polling now runs via queued jobs on queue name: `router-status`.
+- Ensure your worker processes this queue (example: `php artisan queue:work --queue=router-status,default`).
+
 ---
 
 ## 🤝 Contributing
