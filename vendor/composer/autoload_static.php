@@ -4,7 +4,7 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInit4e197d81186d5f84d3747a2d17d7463c
+class ComposerStaticInit5298ff044e5b20b6f548a459921658f7
 {
     public static $files = array (
         '6e3fae29631ef280660b3cdad06f25a8' => __DIR__ . '/..' . '/symfony/deprecation-contracts/function.php',
@@ -86,7 +86,6 @@ class ComposerStaticInit4e197d81186d5f84d3747a2d17d7463c
             'Symfony\\Component\\ErrorHandler\\' => 31,
             'Symfony\\Component\\CssSelector\\' => 30,
             'Symfony\\Component\\Console\\' => 26,
-            'Spatie\\Ssh\\' => 11,
             'Spatie\\LaravelIgnition\\' => 23,
             'Spatie\\Ignition\\' => 16,
             'Spatie\\FlareClient\\' => 19,
@@ -95,7 +94,6 @@ class ComposerStaticInit4e197d81186d5f84d3747a2d17d7463c
         ),
         'R' =>
         array (
-            'RouterOS\\' => 9,
             'Ramsey\\Uuid\\' => 12,
             'Ramsey\\Collection\\' => 18,
         ),
@@ -322,10 +320,6 @@ class ComposerStaticInit4e197d81186d5f84d3747a2d17d7463c
         array (
             0 => __DIR__ . '/..' . '/symfony/console',
         ),
-        'Spatie\\Ssh\\' =>
-        array (
-            0 => __DIR__ . '/..' . '/spatie/ssh/src',
-        ),
         'Spatie\\LaravelIgnition\\' =>
         array (
             0 => __DIR__ . '/..' . '/spatie/laravel-ignition/src',
@@ -347,10 +341,6 @@ class ComposerStaticInit4e197d81186d5f84d3747a2d17d7463c
         'Spatie\\Backtrace\\' =>
         array (
             0 => __DIR__ . '/..' . '/spatie/backtrace/src',
-        ),
-        'RouterOS\\' =>
-        array (
-            0 => __DIR__ . '/..' . '/evilfreelancer/routeros-api-php/src',
         ),
         'Ramsey\\Uuid\\' =>
         array (
@@ -650,7 +640,6 @@ class ComposerStaticInit4e197d81186d5f84d3747a2d17d7463c
         'App\\Http\\Controllers\\Admin\\MapController' => __DIR__ . '/../..' . '/app/Http/Controllers/Admin/MapController.php',
         'App\\Http\\Controllers\\Admin\\MessagingController' => __DIR__ . '/../..' . '/app/Http/Controllers/Admin/MessagingController.php',
         'App\\Http\\Controllers\\Admin\\MikrotikMonitorController' => __DIR__ . '/../..' . '/app/Http/Controllers/Admin/MikrotikMonitorController.php',
-        'App\\Http\\Controllers\\Admin\\OpenvpnConfigurationController' => __DIR__ . '/../..' . '/app/Http/Controllers/Admin/OpenvpnConfigurationController.php',
         'App\\Http\\Controllers\\Admin\\ProfileController' => __DIR__ . '/../..' . '/app/Http/Controllers/Admin/ProfileController.php',
         'App\\Http\\Controllers\\Admin\\ReportController' => __DIR__ . '/../..' . '/app/Http/Controllers/Admin/ReportController.php',
         'App\\Http\\Controllers\\Admin\\RoleController' => __DIR__ . '/../..' . '/app/Http/Controllers/Admin/RoleController.php',
@@ -764,8 +753,6 @@ class ComposerStaticInit4e197d81186d5f84d3747a2d17d7463c
         'App\\Http\\Requests\\Admin\\SellerRequest' => __DIR__ . '/../..' . '/app/Http/Requests/Admin/SellerRequest.php',
         'App\\Http\\Requests\\Admin\\ServerRequest' => __DIR__ . '/../..' . '/app/Http/Requests/Admin/ServerRequest.php',
         'App\\Http\\Requests\\Admin\\SettingRequest' => __DIR__ . '/../..' . '/app/Http/Requests/Admin/SettingRequest.php',
-        'App\\Http\\Requests\\Admin\\StoreRouterRequest' => __DIR__ . '/../..' . '/app/Http/Requests/Admin/StoreRouterRequest.php',
-        'App\\Http\\Requests\\Admin\\UpdateRouterRequest' => __DIR__ . '/../..' . '/app/Http/Requests/Admin/UpdateRouterRequest.php',
         'App\\Http\\Requests\\Admin\\UserCSVRequest' => __DIR__ . '/../..' . '/app/Http/Requests/Admin/UserCSVRequest.php',
         'App\\Http\\Requests\\Admin\\UserRequest' => __DIR__ . '/../..' . '/app/Http/Requests/Admin/UserRequest.php',
         'App\\Http\\Requests\\Seller\\ProfileRequest' => __DIR__ . '/../..' . '/app/Http/Requests/Seller/ProfileRequest.php',
@@ -774,8 +761,6 @@ class ComposerStaticInit4e197d81186d5f84d3747a2d17d7463c
         'App\\Http\\Requests\\Tenant\\StoreCustomerRequest' => __DIR__ . '/../..' . '/app/Http/Requests/Tenant/StoreCustomerRequest.php',
         'App\\Http\\Requests\\Tenant\\StoreSubscriberRequest' => __DIR__ . '/../..' . '/app/Http/Requests/Tenant/StoreSubscriberRequest.php',
         'App\\Http\\Requests\\Tenant\\UpdateCustomerRequest' => __DIR__ . '/../..' . '/app/Http/Requests/Tenant/UpdateCustomerRequest.php',
-        'App\\Jobs\\CheckRouterStatusJob' => __DIR__ . '/../..' . '/app/Jobs/CheckRouterStatusJob.php',
-        'App\\Jobs\\RefreshAllRouterStatusesJob' => __DIR__ . '/../..' . '/app/Jobs/RefreshAllRouterStatusesJob.php',
         'App\\Kernel' => __DIR__ . '/..' . '/laravel/pint/app/Kernel.php',
         'App\\Listeners\\LogSuspiciousActivity' => __DIR__ . '/../..' . '/app/Listeners/LogSuspiciousActivity.php',
         'App\\Models\\Admin' => __DIR__ . '/../..' . '/app/Models/Admin.php',
@@ -801,7 +786,6 @@ class ComposerStaticInit4e197d81186d5f84d3747a2d17d7463c
         'App\\Models\\MessageLog' => __DIR__ . '/../..' . '/app/Models/MessageLog.php',
         'App\\Models\\MpesaPayment' => __DIR__ . '/../..' . '/app/Models/MpesaPayment.php',
         'App\\Models\\Nas' => __DIR__ . '/../..' . '/app/Models/Nas.php',
-        'App\\Models\\OpenvpnConfiguration' => __DIR__ . '/../..' . '/app/Models/OpenvpnConfiguration.php',
         'App\\Models\\Package' => __DIR__ . '/../..' . '/app/Models/Package.php',
         'App\\Models\\Payment' => __DIR__ . '/../..' . '/app/Models/Payment.php',
         'App\\Models\\PendingRouterCommand' => __DIR__ . '/../..' . '/app/Models/PendingRouterCommand.php',
@@ -889,7 +873,6 @@ class ComposerStaticInit4e197d81186d5f84d3747a2d17d7463c
         'App\\Services\\PaymentService' => __DIR__ . '/../..' . '/app/Services/PaymentService.php',
         'App\\Services\\RadiusService' => __DIR__ . '/../..' . '/app/Services/RadiusService.php',
         'App\\Services\\RouterCommandService' => __DIR__ . '/../..' . '/app/Services/RouterCommandService.php',
-        'App\\Services\\RouterConnectionService' => __DIR__ . '/../..' . '/app/Services/RouterConnectionService.php',
         'App\\Services\\RouterOSApiService' => __DIR__ . '/../..' . '/app/Services/RouterOSApiService.php',
         'App\\Services\\SmsService' => __DIR__ . '/../..' . '/app/Services/SmsService.php',
         'App\\Services\\SubscriptionService' => __DIR__ . '/../..' . '/app/Services/SubscriptionService.php',
@@ -6243,32 +6226,6 @@ class ComposerStaticInit4e197d81186d5f84d3747a2d17d7463c
         'Ramsey\\Uuid\\UuidInterface' => __DIR__ . '/..' . '/ramsey/uuid/src/UuidInterface.php',
         'Ramsey\\Uuid\\Validator\\GenericValidator' => __DIR__ . '/..' . '/ramsey/uuid/src/Validator/GenericValidator.php',
         'Ramsey\\Uuid\\Validator\\ValidatorInterface' => __DIR__ . '/..' . '/ramsey/uuid/src/Validator/ValidatorInterface.php',
-        'RouterOS\\APIConnector' => __DIR__ . '/..' . '/evilfreelancer/routeros-api-php/src/APIConnector.php',
-        'RouterOS\\APILengthCoDec' => __DIR__ . '/..' . '/evilfreelancer/routeros-api-php/src/APILengthCoDec.php',
-        'RouterOS\\Client' => __DIR__ . '/..' . '/evilfreelancer/routeros-api-php/src/Client.php',
-        'RouterOS\\Config' => __DIR__ . '/..' . '/evilfreelancer/routeros-api-php/src/Config.php',
-        'RouterOS\\Exceptions\\BadCredentialsException' => __DIR__ . '/..' . '/evilfreelancer/routeros-api-php/src/Exceptions/BadCredentialsException.php',
-        'RouterOS\\Exceptions\\ClientException' => __DIR__ . '/..' . '/evilfreelancer/routeros-api-php/src/Exceptions/ClientException.php',
-        'RouterOS\\Exceptions\\ConfigException' => __DIR__ . '/..' . '/evilfreelancer/routeros-api-php/src/Exceptions/ConfigException.php',
-        'RouterOS\\Exceptions\\ConnectException' => __DIR__ . '/..' . '/evilfreelancer/routeros-api-php/src/Exceptions/ConnectException.php',
-        'RouterOS\\Exceptions\\QueryException' => __DIR__ . '/..' . '/evilfreelancer/routeros-api-php/src/Exceptions/QueryException.php',
-        'RouterOS\\Exceptions\\StreamException' => __DIR__ . '/..' . '/evilfreelancer/routeros-api-php/src/Exceptions/StreamException.php',
-        'RouterOS\\Helpers\\ArrayHelper' => __DIR__ . '/..' . '/evilfreelancer/routeros-api-php/src/Helpers/ArrayHelper.php',
-        'RouterOS\\Helpers\\BinaryStringHelper' => __DIR__ . '/..' . '/evilfreelancer/routeros-api-php/src/Helpers/BinaryStringHelper.php',
-        'RouterOS\\Helpers\\TypeHelper' => __DIR__ . '/..' . '/evilfreelancer/routeros-api-php/src/Helpers/TypeHelper.php',
-        'RouterOS\\Interfaces\\ClientInterface' => __DIR__ . '/..' . '/evilfreelancer/routeros-api-php/src/Interfaces/ClientInterface.php',
-        'RouterOS\\Interfaces\\ConfigInterface' => __DIR__ . '/..' . '/evilfreelancer/routeros-api-php/src/Interfaces/ConfigInterface.php',
-        'RouterOS\\Interfaces\\QueryInterface' => __DIR__ . '/..' . '/evilfreelancer/routeros-api-php/src/Interfaces/QueryInterface.php',
-        'RouterOS\\Interfaces\\StreamInterface' => __DIR__ . '/..' . '/evilfreelancer/routeros-api-php/src/Interfaces/StreamInterface.php',
-        'RouterOS\\Laravel\\Facade' => __DIR__ . '/..' . '/evilfreelancer/routeros-api-php/src/Laravel/Facade.php',
-        'RouterOS\\Laravel\\ServiceProvider' => __DIR__ . '/..' . '/evilfreelancer/routeros-api-php/src/Laravel/ServiceProvider.php',
-        'RouterOS\\Laravel\\Wrapper' => __DIR__ . '/..' . '/evilfreelancer/routeros-api-php/src/Laravel/Wrapper.php',
-        'RouterOS\\Query' => __DIR__ . '/..' . '/evilfreelancer/routeros-api-php/src/Query.php',
-        'RouterOS\\ResponseIterator' => __DIR__ . '/..' . '/evilfreelancer/routeros-api-php/src/ResponseIterator.php',
-        'RouterOS\\ShortsTrait' => __DIR__ . '/..' . '/evilfreelancer/routeros-api-php/src/ShortsTrait.php',
-        'RouterOS\\SocketTrait' => __DIR__ . '/..' . '/evilfreelancer/routeros-api-php/src/SocketTrait.php',
-        'RouterOS\\Streams\\ResourceStream' => __DIR__ . '/..' . '/evilfreelancer/routeros-api-php/src/Streams/ResourceStream.php',
-        'RouterOS\\Streams\\StringStream' => __DIR__ . '/..' . '/evilfreelancer/routeros-api-php/src/Streams/StringStream.php',
         'SQLite3Exception' => __DIR__ . '/..' . '/symfony/polyfill-php83/Resources/stubs/SQLite3Exception.php',
         'SebastianBergmann\\CliParser\\AmbiguousOptionException' => __DIR__ . '/..' . '/sebastian/cli-parser/src/exceptions/AmbiguousOptionException.php',
         'SebastianBergmann\\CliParser\\Exception' => __DIR__ . '/..' . '/sebastian/cli-parser/src/exceptions/Exception.php',
@@ -6716,7 +6673,6 @@ class ComposerStaticInit4e197d81186d5f84d3747a2d17d7463c
         'Spatie\\LaravelIgnition\\Support\\StringComparator' => __DIR__ . '/..' . '/spatie/error-solutions/legacy/laravel-ignition/Support/StringComparator.php',
         'Spatie\\LaravelIgnition\\Views\\BladeSourceMapCompiler' => __DIR__ . '/..' . '/spatie/laravel-ignition/src/Views/BladeSourceMapCompiler.php',
         'Spatie\\LaravelIgnition\\Views\\ViewExceptionMapper' => __DIR__ . '/..' . '/spatie/laravel-ignition/src/Views/ViewExceptionMapper.php',
-        'Spatie\\Ssh\\Ssh' => __DIR__ . '/..' . '/spatie/ssh/src/Ssh.php',
         'Stringable' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/Stringable.php',
         'Symfony\\Component\\Console\\Application' => __DIR__ . '/..' . '/symfony/console/Application.php',
         'Symfony\\Component\\Console\\Attribute\\AsCommand' => __DIR__ . '/..' . '/symfony/console/Attribute/AsCommand.php',
@@ -7716,8 +7672,6 @@ class ComposerStaticInit4e197d81186d5f84d3747a2d17d7463c
         'Termwind\\ValueObjects\\Styles' => __DIR__ . '/..' . '/nunomaduro/termwind/src/ValueObjects/Styles.php',
         'Tests\\CreatesApplication' => __DIR__ . '/../..' . '/tests/CreatesApplication.php',
         'Tests\\Feature\\Admin\\ConfigurationDashboardTest' => __DIR__ . '/../..' . '/tests/Feature/Admin/ConfigurationDashboardTest.php',
-        'Tests\\Feature\\Admin\\OpenvpnConfigurationFeatureTest' => __DIR__ . '/../..' . '/tests/Feature/Admin/OpenvpnConfigurationFeatureTest.php',
-        'Tests\\Feature\\Admin\\RouterFormAndStatusFeatureTest' => __DIR__ . '/../..' . '/tests/Feature/Admin/RouterFormAndStatusFeatureTest.php',
         'Tests\\Feature\\Auth\\AdminAuthTest' => __DIR__ . '/../..' . '/tests/Feature/Auth/AdminAuthTest.php',
         'Tests\\Feature\\Auth\\CommunityAuthTest' => __DIR__ . '/../..' . '/tests/Feature/Auth/CommunityAuthTest.php',
         'Tests\\Feature\\Auth\\CustomerAuthTest' => __DIR__ . '/../..' . '/tests/Feature/Auth/CustomerAuthTest.php',
@@ -10415,10 +10369,10 @@ class ComposerStaticInit4e197d81186d5f84d3747a2d17d7463c
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInit4e197d81186d5f84d3747a2d17d7463c::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInit4e197d81186d5f84d3747a2d17d7463c::$prefixDirsPsr4;
-            $loader->prefixesPsr0 = ComposerStaticInit4e197d81186d5f84d3747a2d17d7463c::$prefixesPsr0;
-            $loader->classMap = ComposerStaticInit4e197d81186d5f84d3747a2d17d7463c::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInit5298ff044e5b20b6f548a459921658f7::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInit5298ff044e5b20b6f548a459921658f7::$prefixDirsPsr4;
+            $loader->prefixesPsr0 = ComposerStaticInit5298ff044e5b20b6f548a459921658f7::$prefixesPsr0;
+            $loader->classMap = ComposerStaticInit5298ff044e5b20b6f548a459921658f7::$classMap;
 
         }, null, ClassLoader::class);
     }
