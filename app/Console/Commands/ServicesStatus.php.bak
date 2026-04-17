@@ -1,0 +1,124 @@
+<?php
+
+namespace App\Console\Commands;
+
+use Illuminate\Console\Command;
+
+class ServicesStatus extends Command
+{
+    protected $signature = 'services:status';
+    protected $description = 'Get service status as JSON';
+
+    public function handle(): int
+    {
+        $services = [
+            $this->getOpenVpnStatus(),
+            $this->getFreeRadiusStatus(),
+            $this->getSupervisorStatus(),
+        ];
+
+        $this->output->write(json_encode([
+            'services' => $services
+        ], JSON_PRETTY_PRINT));
+
+        return 0;
+    }
+
+    protected function getOpenVpnStatus(): array
+    {
+        $result = $this->executeCommand("sudo supervisorctl status openvpn 2>&1");
+        $output = $result['output'];
+        
+        $isRunning = strpos($output, 'RUNNING') !== false;
+        $pid = 'N/A';
+        $uptime = 'N/A';
+        
+        if ($isRunning) {
+            preg_match('/pid (\d+)/', $output, $pidMatch);
+            preg_match('/uptime (.*?)(?:\n|$)/', $output, $uptimeMatch);
+            $pid = $pidMatch[1] ?? 'N/A';
+            $uptime = trim($uptimeMatch[1] ?? 'N/A');
+        }
+        
+        $ver = shell_exec('openvpn --version 2>&1 | head -1');
+        preg_match('/\d+\.\d+\.\d+/', $ver, $match);
+        $version = $match[0] ?? '2.6.19';
+        
+        return [
+            'key' => 'openvpn',
+            'name' => 'OpenVPN',
+            'running' => $isRunning,
+            'pid' => $pid,
+            'uptime' => $uptime,
+            'version' => $version,
+            'config_path' => '/etc/openvpn/server.conf',
+        ];
+    }
+
+    protected function getFreeRadiusStatus(): array
+    {
+        $result = $this->executeCommand("sudo supervisorctl status freeradius 2>&1");
+        $output = $result['output'];
+        
+        $isRunning = strpos($output, 'RUNNING') !== false;
+        $pid = 'N/A';
+        $uptime = 'N/A';
+        
+        if ($isRunning) {
+            preg_match('/pid (\d+)/', $output, $pidMatch);
+            preg_match('/uptime (.*?)(?:\n|$)/', $output, $uptimeMatch);
+            $pid = $pidMatch[1] ?? 'N/A';
+            $uptime = trim($uptimeMatch[1] ?? 'N/A');
+        }
+        
+        $ver = shell_exec('radiusd -v 2>&1 | head -1');
+        preg_match('/\d+\.\d+\.\d+/', $ver, $match);
+        $version = $match[0] ?? '3.2.8';
+        
+        return [
+            'key' => 'freeradius',
+            'name' => 'FreeRADIUS',
+            'running' => $isRunning,
+            'pid' => $pid,
+            'uptime' => $uptime,
+            'version' => $version,
+            'config_path' => '/etc/freeradius/3.0/radiusd.conf',
+        ];
+    }
+
+    protected function getSupervisorStatus(): array
+    {
+        $result = $this->executeCommand("systemctl is-active supervisor 2>&1");
+        $isRunning = trim($result['output']) === 'active';
+        
+        $pid = 'N/A';
+        if ($isRunning) {
+            $pidResult = $this->executeCommand("systemctl show supervisor --property=MainPID --value 2>&1");
+            $pidNum = (int) trim($pidResult['output']);
+            $pid = $pidNum > 0 ? (string)$pidNum : 'N/A';
+        }
+        
+        $version = trim(shell_exec('supervisord --version 2>&1')) ?: '4.2.5';
+        
+        return [
+            'key' => 'supervisor',
+            'name' => 'Supervisor',
+            'running' => $isRunning,
+            'pid' => $pid,
+            'uptime' => 'N/A',
+            'version' => $version,
+            'config_path' => '/etc/supervisor/supervisord.conf',
+        ];
+    }
+
+    protected function executeCommand(string $command): array
+    {
+        $output = [];
+        $exitCode = 1;
+        exec($command, $output, $exitCode);
+        return [
+            'output' => trim(implode("\n", $output)),
+            'exit_code' => $exitCode,
+        ];
+    }
+}
