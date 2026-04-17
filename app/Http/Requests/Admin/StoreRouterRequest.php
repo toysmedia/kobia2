@@ -15,7 +15,7 @@ class StoreRouterRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:100',
-            'connection_type' => 'required|in:public_ip,through_openvpn',
+            'connection_type' => 'required|in:public_ip,openvpn',
             'ip_address' => 'required|ip',
             'nas_secret' => 'required|string|max:100',
             'port' => 'required|integer|min:1|max:65535',

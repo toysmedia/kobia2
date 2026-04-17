@@ -108,7 +108,7 @@
                             <div class="mb-3">
                                 <label class="form-label fw-semibold">Database Name <span class="text-danger">*</span></label>
                                 <input type="text" name="radius_mysql_db" class="form-control @error('radius_mysql_db') is-invalid @enderror"
-                                       value="{{ old('radius_mysql_db', $settings['radius_mysql_db']) }}" placeholder="e.g. kobia_billing" required>
+                                       value="{{ old('radius_mysql_db', $settings['radius_mysql_db']) }}" placeholder="e.g. oxdes_billing" required>
                                 @error('radius_mysql_db')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
 

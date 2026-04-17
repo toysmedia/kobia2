@@ -156,8 +156,8 @@ php artisan test tests/Feature/Dashboard/
 
 - Use **Admin → ISP → OpenVPN Configurations** to manage OpenVPN client configs.
 - Each row has **Edit / Delete / Configure / Test Connection** actions.
-- **Configure** opens a modal with a one-line MikroTik command that fetches a signed `.rsc` installer.
-- The signed installer fetches `ca.crt`, client `.crt`, and client `.key` via signed URLs and imports them before creating `ovpn-kobia`.
+- **Configure** opens a modal with a one-line MikroTik command that fetches a token-protected `.rsc` installer.
+- The installer fetches `ca.crt`, client `.crt`, and client `.key` via tokenized URLs and imports them before creating the OpenVPN client.
 
 ### Router Management Flow
 

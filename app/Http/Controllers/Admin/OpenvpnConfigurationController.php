@@ -4,9 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\OpenvpnConfiguration;
+use App\Http\Requests\Admin\StoreOpenvpnConfigurationRequest;
+use App\Http\Requests\Admin\UpdateOpenvpnConfigurationRequest;
 use App\Services\RouterConnectionService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class OpenvpnConfigurationController extends Controller
 {
@@ -17,42 +20,40 @@ class OpenvpnConfigurationController extends Controller
         return view('admin.configuration.openvpn_index', compact('configs'));
     }
 
-    public function store(Request $request)
+    public function store(StoreOpenvpnConfigurationRequest $request)
     {
-        $data = $request->validate([
-            'name' => 'required|string|max:120',
-            'client_name' => 'required|string|max:120',
-            'auth_username' => 'nullable|string|max:120',
-            'tunnel_ip' => 'nullable|ip',
-            'router_ip' => 'nullable|ip',
-            'api_port' => 'nullable|integer|min:1|max:65535',
-            'openvpn_port' => 'nullable|integer|min:1|max:65535',
-            'notes' => 'nullable|string',
-        ]);
-
-        $data['status'] = 'draft';
-        $data['api_port'] = $data['api_port'] ?? 8728;
-        $data['openvpn_port'] = $data['openvpn_port'] ?? 443;
-        $data['auth_username'] = $data['auth_username'] ?: $data['client_name'];
+        $validated = $request->validated();
+        $data = [
+            'name' => $validated['name'],
+            'connect_to' => $validated['connect_to'],
+            'port' => (int) $validated['port'],
+            'client_name' => 'router',
+            'tunnel_ip' => $validated['connect_to'],
+            'openvpn_port' => (int) $validated['port'],
+            'status' => 'draft',
+            'api_port' => 8728,
+            'certificate_name' => 'router',
+            'auth' => 'sha1',
+            'cipher' => 'aes256',
+            'mode' => 'ip',
+            'protocol' => 'tcp',
+        ];
 
         OpenvpnConfiguration::create($data);
 
         return back()->with('success', 'OpenVPN configuration created.');
     }
 
-    public function update(Request $request, OpenvpnConfiguration $openvpnConfiguration)
+    public function update(UpdateOpenvpnConfigurationRequest $request, OpenvpnConfiguration $openvpnConfiguration)
     {
-        $data = $request->validate([
-            'name' => 'required|string|max:120',
-            'client_name' => 'required|string|max:120',
-            'auth_username' => 'nullable|string|max:120',
-            'tunnel_ip' => 'nullable|ip',
-            'router_ip' => 'nullable|ip',
-            'api_port' => 'nullable|integer|min:1|max:65535',
-            'openvpn_port' => 'nullable|integer|min:1|max:65535',
-            'status' => 'nullable|string|max:50',
-            'notes' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
+        $data = [
+            'name' => $validated['name'],
+            'connect_to' => $validated['connect_to'],
+            'port' => (int) $validated['port'],
+            'tunnel_ip' => $validated['connect_to'],
+            'openvpn_port' => (int) $validated['port'],
+        ];
 
         $openvpnConfiguration->update($data);
 
@@ -84,19 +85,24 @@ class OpenvpnConfigurationController extends Controller
 
     public function downloadScript(Request $request, OpenvpnConfiguration $openvpnConfiguration)
     {
-        abort_unless($request->hasValidSignature(), 403);
+        abort_unless($this->hasValidDownloadToken($request, $openvpnConfiguration), 403);
+
+        $certToken = $this->issueDownloadToken($openvpnConfiguration);
 
         $domain = $this->domain();
         $certUrls = [
-            'ca' => $this->signedCertUrl($openvpnConfiguration, 'ca.crt'),
-            'crt' => $this->signedCertUrl($openvpnConfiguration, 'client.crt'),
-            'key' => $this->signedCertUrl($openvpnConfiguration, 'client.key'),
+            'ca' => $this->certUrl($openvpnConfiguration, 'ca.crt', $certToken),
+            'crt' => $this->certUrl($openvpnConfiguration, 'client.crt', $certToken),
+            'key' => $this->certUrl($openvpnConfiguration, 'client.key', $certToken),
         ];
 
-        $remoteHost = $domain;
-        $remotePort = (int) ($openvpnConfiguration->openvpn_port ?: 443);
-        $user = $openvpnConfiguration->auth_username ?: $openvpnConfiguration->client_name;
-        $certName = pathinfo($openvpnConfiguration->client_cert_filename, PATHINFO_FILENAME);
+        $remoteHost = $openvpnConfiguration->connect_to ?: $openvpnConfiguration->tunnel_ip ?: $domain;
+        $remotePort = (int) ($openvpnConfiguration->port ?: $openvpnConfiguration->openvpn_port ?: 1194);
+        $certificateName = $openvpnConfiguration->certificate_name ?: 'router';
+        $auth = $openvpnConfiguration->auth ?: 'sha1';
+        $cipher = $openvpnConfiguration->cipher ?: 'aes256';
+        $mode = $openvpnConfiguration->mode ?: 'ip';
+        $protocol = $openvpnConfiguration->protocol ?: 'tcp';
 
         $script = implode("\n", [
             '/tool fetch url="' . $certUrls['ca'] . '" dst-path="ca.crt"',
@@ -109,10 +115,10 @@ class OpenvpnConfigurationController extends Controller
             '/file remove "ca.crt"',
             '/file remove "' . basename($openvpnConfiguration->client_cert_filename) . '"',
             '/file remove "' . basename($openvpnConfiguration->client_key_filename) . '"',
-            '/interface ovpn-client add name="ovpn-kobia" connect-to="' . $remoteHost . '" port=' . $remotePort . ' user="' . $user . '" certificate="' . $certName . '" auth=sha1 cipher=aes256 mode=ip disabled=no',
+            '/interface ovpn-client add name=' . $openvpnConfiguration->name . ' connect-to=' . $remoteHost . ' port=' . $remotePort . ' certificate=' . $certificateName . ' auth=' . $auth . ' cipher=' . $cipher . ' mode=' . $mode . ' protocol=' . $protocol . ' disabled=no',
         ]) . "\n";
 
-        $filename = 'kobia-ovpn-' . $openvpnConfiguration->id . '.rsc';
+        $filename = 'oxdes-ovpn-' . $openvpnConfiguration->id . '.rsc';
 
         return response($script, 200, [
             'Content-Type' => 'text/plain; charset=utf-8',
@@ -122,7 +128,7 @@ class OpenvpnConfigurationController extends Controller
 
     public function downloadCert(Request $request, OpenvpnConfiguration $openvpnConfiguration, string $file)
     {
-        abort_unless($request->hasValidSignature(), 403);
+        abort_unless($this->hasValidDownloadToken($request, $openvpnConfiguration), 403);
 
         $map = [
             'ca.crt' => $openvpnConfiguration->ca_cert_filename,
@@ -172,23 +178,53 @@ class OpenvpnConfigurationController extends Controller
 
     public function buildOneLiner(OpenvpnConfiguration $openvpnConfiguration): string
     {
-        $ttl = now()->addMinutes((int) config('vpn.script_ttl_minutes', 30));
-        $url = URL::temporarySignedRoute('ovpn.mikrotik.download_script', $ttl, ['openvpnConfiguration' => $openvpnConfiguration->id]);
+        $token = $this->issueDownloadToken($openvpnConfiguration);
+        $url = route('ovpn.mikrotik.download_script', [
+            'openvpnConfiguration' => $openvpnConfiguration->id,
+            'token' => $token,
+        ]);
 
-        return ':local ver [/system resource get version] ; :local version [:pick $ver 0 [:find $ver " "]] ; /tool fetch url="' . $url . '&v=$version" dst-path="kobia-ovpn-setup.rsc" ; :delay 2s ; /import file-name="kobia-ovpn-setup.rsc" ; :delay 2s ; /file remove "kobia-ovpn-setup.rsc";';
+        return ':local ver [/system resource get version] ; :local version [:pick $ver 0 [:find $ver " "]] ; /tool fetch url="' . $url . '&v=$version" dst-path="oxdes-ovpn-setup.rsc" ; :delay 2s ; /import file-name="oxdes-ovpn-setup.rsc" ; :delay 2s ; /file remove "oxdes-ovpn-setup.rsc";';
     }
 
-    protected function signedCertUrl(OpenvpnConfiguration $openvpnConfiguration, string $file): string
+    protected function certUrl(OpenvpnConfiguration $openvpnConfiguration, string $file, string $token): string
     {
-        return URL::temporarySignedRoute(
+        return route(
             'ovpn.mikrotik.download_cert',
-            now()->addMinutes((int) config('vpn.script_ttl_minutes', 30)),
-            ['openvpnConfiguration' => $openvpnConfiguration->id, 'file' => $file]
+            ['openvpnConfiguration' => $openvpnConfiguration->id, 'file' => $file, 'token' => $token]
         );
     }
 
     protected function domain(): string
     {
         return (string) config('vpn.domain', parse_url(config('app.url'), PHP_URL_HOST));
+    }
+
+    protected function issueDownloadToken(OpenvpnConfiguration $openvpnConfiguration): string
+    {
+        $token = Str::random(64);
+        $ttl = now()->addMinutes((int) config('vpn.script_ttl_minutes', 30));
+
+        Cache::put($this->tokenCacheKey($token), ['openvpn_configuration_id' => $openvpnConfiguration->id], $ttl);
+
+        return $token;
+    }
+
+    protected function hasValidDownloadToken(Request $request, OpenvpnConfiguration $openvpnConfiguration): bool
+    {
+        $token = (string) $request->query('token', '');
+
+        if ($token === '') {
+            return false;
+        }
+
+        $data = Cache::get($this->tokenCacheKey($token));
+
+        return is_array($data) && (int) ($data['openvpn_configuration_id'] ?? 0) === (int) $openvpnConfiguration->id;
+    }
+
+    protected function tokenCacheKey(string $token): string
+    {
+        return 'ovpn:download-token:' . $token;
     }
 }

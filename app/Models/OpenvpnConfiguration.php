@@ -12,6 +12,13 @@ class OpenvpnConfiguration extends Model
 
     protected $fillable = [
         'name',
+        'connect_to',
+        'port',
+        'certificate_name',
+        'auth',
+        'cipher',
+        'mode',
+        'protocol',
         'client_name',
         'auth_username',
         'tunnel_ip',

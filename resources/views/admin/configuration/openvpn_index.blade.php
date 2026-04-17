@@ -18,13 +18,9 @@
                 <form method="POST" action="{{ route('admin.isp.openvpn_configurations.store') }}">
                     @csrf
                     <div class="row">
-                        <div class="col-md-3 mb-2"><input class="form-control" name="name" placeholder="Name" required></div>
-                        <div class="col-md-2 mb-2"><input class="form-control" name="client_name" placeholder="Client Name" required></div>
-                        <div class="col-md-2 mb-2"><input class="form-control" name="auth_username" placeholder="Auth User"></div>
-                        <div class="col-md-2 mb-2"><input class="form-control" name="tunnel_ip" placeholder="Tunnel IP"></div>
-                        <div class="col-md-2 mb-2"><input class="form-control" name="router_ip" placeholder="Router IP"></div>
-                        <div class="col-md-1 mb-2"><input class="form-control" name="api_port" value="8728" placeholder="Port"></div>
-                        <div class="col-md-12 mb-2"><textarea class="form-control" name="notes" rows="2" placeholder="Notes"></textarea></div>
+                        <div class="col-md-4 mb-2"><input class="form-control" name="name" placeholder="Name" required></div>
+                        <div class="col-md-5 mb-2"><input class="form-control" name="connect_to" placeholder="IP to connect" required></div>
+                        <div class="col-md-3 mb-2"><input class="form-control" name="port" value="1194" placeholder="Port" required></div>
                     </div>
                     <button class="btn btn-primary btn-sm" type="submit">Save</button>
                 </form>
@@ -39,8 +35,8 @@
                     <thead>
                         <tr>
                             <th>Name</th>
-                            <th>Client</th>
-                            <th>Assigned IP</th>
+                            <th>IP to connect</th>
+                            <th>Port</th>
                             <th>Status</th>
                             <th>Created</th>
                             <th class="text-center">Actions</th>
@@ -50,8 +46,8 @@
                         @forelse($configs as $config)
                             <tr>
                                 <td>{{ $config->name }}</td>
-                                <td>{{ $config->client_name }}</td>
-                                <td>{{ $config->tunnel_ip ?: '-' }}</td>
+                                <td>{{ $config->connect_to ?: $config->tunnel_ip ?: '-' }}</td>
+                                <td>{{ $config->port ?: $config->openvpn_port ?: '-' }}</td>
                                 <td><span class="badge bg-secondary">{{ strtoupper($config->status) }}</span></td>
                                 <td>{{ $config->created_at?->format('Y-m-d H:i') }}</td>
                                 <td class="text-center">
@@ -95,13 +91,8 @@
                 @csrf @method('PUT')
                 <div class="modal-body">
                     <div class="mb-2"><label class="form-label">Name</label><input class="form-control" name="name" id="edit_name" required></div>
-                    <div class="mb-2"><label class="form-label">Client Name</label><input class="form-control" name="client_name" id="edit_client_name" required></div>
-                    <div class="mb-2"><label class="form-label">Auth Username</label><input class="form-control" name="auth_username" id="edit_auth_username"></div>
-                    <div class="mb-2"><label class="form-label">Tunnel IP</label><input class="form-control" name="tunnel_ip" id="edit_tunnel_ip"></div>
-                    <div class="mb-2"><label class="form-label">Router IP</label><input class="form-control" name="router_ip" id="edit_router_ip"></div>
-                    <div class="mb-2"><label class="form-label">API Port</label><input class="form-control" name="api_port" id="edit_api_port"></div>
-                    <div class="mb-2"><label class="form-label">Status</label><input class="form-control" name="status" id="edit_status"></div>
-                    <div class="mb-2"><label class="form-label">Notes</label><textarea class="form-control" name="notes" id="edit_notes" rows="2"></textarea></div>
+                    <div class="mb-2"><label class="form-label">IP to connect</label><input class="form-control" name="connect_to" id="edit_connect_to" required></div>
+                    <div class="mb-2"><label class="form-label">Port</label><input class="form-control" name="port" id="edit_port" required></div>
                 </div>
                 <div class="modal-footer"><button class="btn btn-primary" type="submit">Update</button></div>
             </form>
@@ -149,13 +140,8 @@ function regenerateOneLiner() {
 function openEditModal(configId, data) {
     document.getElementById('editForm').action = `/admin/isp/openvpn-configurations/${configId}`;
     document.getElementById('edit_name').value = data.name || '';
-    document.getElementById('edit_client_name').value = data.client_name || '';
-    document.getElementById('edit_auth_username').value = data.auth_username || '';
-    document.getElementById('edit_tunnel_ip').value = data.tunnel_ip || '';
-    document.getElementById('edit_router_ip').value = data.router_ip || '';
-    document.getElementById('edit_api_port').value = data.api_port || 8728;
-    document.getElementById('edit_status').value = data.status || 'draft';
-    document.getElementById('edit_notes').value = data.notes || '';
+    document.getElementById('edit_connect_to').value = data.connect_to || data.tunnel_ip || '';
+    document.getElementById('edit_port').value = data.port || data.openvpn_port || 1194;
     new bootstrap.Modal(document.getElementById('editModal')).show();
 }
 

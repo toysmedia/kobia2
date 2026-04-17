@@ -28,7 +28,7 @@ class CheckRouterStatusJob implements ShouldQueue
             return;
         }
 
-        $host = $router->connection_type === 'through_openvpn'
+        $host = $router->connection_type === 'openvpn'
             ? ($router->vpn_ip ?: $router->wan_ip)
             : ($router->wan_ip ?: $router->vpn_ip);
 

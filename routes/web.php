@@ -89,10 +89,8 @@ Route::prefix('install')->middleware('not_installed')->controller(GuestControlle
 });
 
 Route::get('/ovpn/mikrotik/{openvpnConfiguration}/download-script', [OpenvpnConfigurationController::class, 'downloadScript'])
-    ->middleware('signed')
     ->name('ovpn.mikrotik.download_script');
 
 Route::get('/ovpn/certs/{openvpnConfiguration}/{file}', [OpenvpnConfigurationController::class, 'downloadCert'])
     ->where('file', 'ca\.crt|client\.crt|client\.key')
-    ->middleware('signed')
     ->name('ovpn.mikrotik.download_cert');
