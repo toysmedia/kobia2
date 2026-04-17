@@ -109,11 +109,11 @@ class Router extends Model
      */
     public function isHotspot(): bool
     {
-        return ($this->connection_type ?? '') === 'hotspot';
+        return false;
     }
     public function isVpn(): bool
 {
-    return in_array($this->connection_type, ['vpn', 'through_openvpn'], true);
+    return in_array($this->connection_type, ['vpn', 'through_openvpn', 'openvpn'], true);
 }
 
     public function supportsApi(): bool

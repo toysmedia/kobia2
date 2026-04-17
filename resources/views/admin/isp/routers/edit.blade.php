@@ -25,7 +25,7 @@
                         <label class="form-label">Connection Type</label>
                         <select name="connection_type" class="form-select @error('connection_type') is-invalid @enderror" required>
                             <option value="public_ip" {{ old('connection_type', $router->connection_type) === 'public_ip' ? 'selected' : '' }}>Public IP</option>
-                            <option value="through_openvpn" {{ old('connection_type', $router->connection_type) === 'through_openvpn' ? 'selected' : '' }}>Through OpenVPN</option>
+                            <option value="openvpn" {{ old('connection_type', $router->connection_type) === 'openvpn' ? 'selected' : '' }}>Through OpenVPN</option>
                         </select>
                         @error('connection_type')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>

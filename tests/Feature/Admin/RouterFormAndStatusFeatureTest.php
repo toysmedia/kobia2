@@ -46,7 +46,42 @@ class RouterFormAndStatusFeatureTest extends TestCase
         $response->assertOk();
         $response->assertSee('Public IP');
         $response->assertSee('Through OpenVPN');
+        $response->assertSee('<option value="openvpn"', false);
         $response->assertDontSee('<option value="hotspot"', false);
+    }
+
+    public function test_router_store_validates_connection_type_values(): void
+    {
+        $admin = Admin::factory()->create();
+
+        $valid = $this->actingAs($admin, 'admin')->post('/admin/isp/routers', [
+            'name' => 'Router Public',
+            'connection_type' => 'public_ip',
+            'ip_address' => '41.215.10.6',
+            'nas_secret' => 'testing123',
+            'port' => 8728,
+            'is_active' => 1,
+        ]);
+        $valid->assertRedirect('/admin/isp/routers');
+
+        $invalid = $this->from('/admin/isp/routers/create')->actingAs($admin, 'admin')->post('/admin/isp/routers', [
+            'name' => 'Router Invalid',
+            'connection_type' => 'hotspot',
+            'ip_address' => '41.215.10.7',
+            'nas_secret' => 'testing123',
+            'port' => 8728,
+            'is_active' => 1,
+        ]);
+        $invalid->assertSessionHasErrors('connection_type');
+
+        $missing = $this->from('/admin/isp/routers/create')->actingAs($admin, 'admin')->post('/admin/isp/routers', [
+            'name' => 'Router Missing',
+            'ip_address' => '41.215.10.8',
+            'nas_secret' => 'testing123',
+            'port' => 8728,
+            'is_active' => 1,
+        ]);
+        $missing->assertSessionHasErrors('connection_type');
     }
 
     public function test_router_index_uses_cached_status_without_live_mikrotik_call(): void

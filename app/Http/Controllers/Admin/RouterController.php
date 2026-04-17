@@ -68,7 +68,7 @@ class RouterController extends Controller
         ];
 
         // Set the correct IP field based on connection type
-        if ($validated['connection_type'] === 'through_openvpn') {
+        if ($validated['connection_type'] === 'openvpn') {
             $data['vpn_ip'] = $validated['ip_address'];
             $data['wan_ip'] = null;
         } else {
@@ -128,7 +128,7 @@ class RouterController extends Controller
             'customer_interface' => $router->customer_interface ?: 'bridge1',
         ];
 
-        if ($validated['connection_type'] === 'through_openvpn') {
+        if ($validated['connection_type'] === 'openvpn') {
             $data['vpn_ip'] = $validated['ip_address'];
             $data['wan_ip'] = null;
         } else {
