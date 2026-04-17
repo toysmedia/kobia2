@@ -282,15 +282,7 @@ class ConfigurationController extends Controller
 
     public function openvpn()
     {
-        $settings = [
-            'openvpn_server_ip' => IspSetting::getValue('openvpn_server_ip', ''),
-            'openvpn_port'      => IspSetting::getValue('openvpn_port', '1194'),
-            'openvpn_subnet'    => IspSetting::getValue('openvpn_subnet', '10.8.0.0/24'),
-            'openvpn_key_path'  => IspSetting::getValue('openvpn_key_path', '/etc/openvpn/ta.key'),
-            'openvpn_protocol'  => IspSetting::getValue('openvpn_protocol', 'udp'),
-        ];
-
-        return view('admin.configuration.openvpn', compact('settings'));
+        return redirect()->route('admin.isp.openvpn_configurations.index');
     }
 
     public function saveOpenvpn(Request $request)

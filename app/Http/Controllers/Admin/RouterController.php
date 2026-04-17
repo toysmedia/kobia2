@@ -5,9 +5,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Router;
 use App\Models\Nas;
 use App\Models\AuditLog;
-use App\Models\IspSetting;
+use App\Jobs\RefreshAllRouterStatusesJob;
+use App\Services\RouterConnectionService;
 use App\Services\MikrotikScriptService;
 use App\Services\RouterOSApiService;
+use App\Http\Requests\Admin\StoreRouterRequest;
+use App\Http\Requests\Admin\UpdateRouterRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Http;
@@ -23,6 +26,13 @@ class RouterController extends Controller
     {
         $routers = Router::orderBy('name')->get();
         $nasIps  = Nas::pluck('nasname')->flip()->toArray();
+
+        // TODO: enable router auto-configure in a future release.
+        // $routers->each(fn (Router $router) => $this->autoConfigure($router));
+        if (request()->boolean('refresh_statuses')) {
+            RefreshAllRouterStatusesJob::dispatch()->onQueue('router-status');
+        }
+
         return view('admin.isp.routers.index', compact('routers', 'nasIps'));
     }
 
@@ -31,35 +41,22 @@ class RouterController extends Controller
         return view('admin.isp.routers.create');
     }
 
-    public function store(Request $request)
+    public function store(StoreRouterRequest $request)
     {
-        $validated = $request->validate([
-            'name'             => 'required|string|max:100',
-            'connection_type'  => 'required|string|in:direct,vpn,hotspot',
-            'nas_ip'           => 'required|ip',
-            'nas_secret'       => 'required|string|max:100',
-            'shortname'        => 'required|string|max:100',
-            'api_port'         => 'nullable|integer|min:1|max:65535',
-            'model'            => 'nullable|string|max:100',
-            'routeros_version' => 'nullable|string|max:50',
-            'notes'            => 'nullable|string',
-            'is_active'        => 'boolean',
-        ]);
+        $validated = $request->validated();
 
         // Map form fields to DB columns
         $data = [
             'name'              => $validated['name'],
             'connection_type'   => $validated['connection_type'],
             'radius_secret'     => $validated['nas_secret'],
-            'shortname'         => $validated['shortname'],
-            'api_port'          => $validated['api_port'] ?? 8728,
-            'model'             => $validated['model'] ?? null,
-            'routeros_version'  => $validated['routeros_version'] ?? null,
+            'shortname'         => Str::slug($validated['name']),
+            'api_port'          => $validated['port'] ?? 8728,
             'notes'             => $validated['notes'] ?? null,
             'is_active'         => $request->boolean('is_active', true),
             'wan_interface'     => 'ether1',
             'customer_interface' => 'bridge1',
-            'billing_domain'    => IspSetting::getValue('billing_domain', ''),
+            'billing_domain'    => parse_url((string) config('app.url'), PHP_URL_HOST) ?: '',
             'service_mode'      => 'pppoe_hotspot',
             'openvpn_port'      => config('openvpn.port', 443),
             'pppoe_bridge_name' => 'pppoe_bridge',
@@ -71,11 +68,11 @@ class RouterController extends Controller
         ];
 
         // Set the correct IP field based on connection type
-        if ($validated['connection_type'] === 'vpn') {
-            $data['vpn_ip'] = $validated['nas_ip'];
+        if ($validated['connection_type'] === 'through_openvpn') {
+            $data['vpn_ip'] = $validated['ip_address'];
             $data['wan_ip'] = null;
         } else {
-            $data['wan_ip'] = $validated['nas_ip'];
+            $data['wan_ip'] = $validated['ip_address'];
             $data['vpn_ip'] = null;
         }
 
@@ -115,27 +112,29 @@ class RouterController extends Controller
         return view('admin.isp.routers.edit', compact('router'));
     }
 
-    public function update(Request $request, Router $router)
+    public function update(UpdateRouterRequest $request, Router $router)
     {
         $old  = $router->toArray();
-        $data = $request->validate([
-            'name'               => 'required|string|max:100',
-            'connection_type'    => 'nullable|string|in:direct,vpn,hotspot',
-            'radius_secret'      => 'required|string|max:100',
-            'shortname'          => 'nullable|string|max:100',
-            'api_port'           => 'nullable|integer|min:1|max:65535',
-            'model'              => 'nullable|string|max:100',
-            'routeros_version'   => 'nullable|string|max:50',
-            'wan_interface'      => 'required|string|max:50',
-            'customer_interface' => 'required|string|max:50',
-            'pppoe_pool_range'   => 'required|string',
-            'hotspot_pool_range' => 'required|string',
-            'billing_domain'     => 'nullable|string|max:255',
-            'is_active'          => 'boolean',
-            'notes'              => 'nullable|string',
-            'wan_ip'             => 'nullable|ip',
-            'vpn_ip'             => 'nullable|ip',
-        ]);
+        $validated = $request->validated();
+
+        $data = [
+            'name' => $validated['name'],
+            'connection_type' => $validated['connection_type'],
+            'radius_secret' => $validated['nas_secret'],
+            'api_port' => $validated['port'],
+            'notes' => $validated['notes'] ?? null,
+            'shortname' => Str::slug($validated['name']),
+            'wan_interface' => $router->wan_interface ?: 'ether1',
+            'customer_interface' => $router->customer_interface ?: 'bridge1',
+        ];
+
+        if ($validated['connection_type'] === 'through_openvpn') {
+            $data['vpn_ip'] = $validated['ip_address'];
+            $data['wan_ip'] = null;
+        } else {
+            $data['wan_ip'] = $validated['ip_address'];
+            $data['vpn_ip'] = null;
+        }
 
         $data['is_active'] = $request->boolean('is_active', true);
         $router->update($data);
@@ -379,119 +378,41 @@ class RouterController extends Controller
         ])->deleteFileAfterSend(true);
     }
 
-    /**
-     * Test connection to a router via its VPN IP using RouterOS REST API.
-     *
-     * Uses port 8728 (RouterOS API) not 80.
-     * Also fetches MAC address from /interface/ethernet for WinBox display.
-     * Returns online/offline status based on whether the API responds.
-     */
-    public function testConnection(Router $router)
+    public function testConnection(Request $request, Router $router, RouterConnectionService $connectionService)
     {
-        $result = [
-            'api_reachable'     => false,
-            'radius_configured' => false,
-            'online'            => false,
-            'router_identity'   => null,
-            'uptime'            => null,
-            'version'           => null,
-            'mac_address'       => null,
-            'board_name'        => null,
-            'cpu_load'          => null,
-            'free_memory'       => null,
-            'error'             => null,
-        ];
+        $credentials = $request->validate([
+            'username' => 'required|string|max:120',
+            'password' => 'required|string|max:255',
+        ]);
 
-        // Check RADIUS/NAS table — use vpn_ip (with fallback to wan_ip) to match syncNas
-        $nasIp = $router->vpn_ip ?: $router->wan_ip;
-        $result['radius_configured'] = $nasIp ? Nas::where('nasname', $nasIp)->exists() : false;
-
-        // Prefer VPN IP (OpenVPN tunnel) over WAN IP
-        $ip      = $router->vpn_ip ?: $router->wan_ip;
-        // RouterOS REST API runs on port 80 by default but we enable it on 8728
-        // The script sets: /ip service set api port=8728
-        // REST API on RouterOS 7.x runs on /rest/* via www service (port 80)
-        // or dedicated api-ssl (443). We use the plain API port 8728 with the
-        // RouterOS REST API which is available on the www port (80) in ROS 7.x.
-        // Use port 80 for REST, 8728 for raw API. REST API is on www (80/443).
-        $apiPort = $router->api_port ?? 80;
-        $apiUser = $router->api_username ?? 'admin';
-        $apiPass = $router->api_password ?? '';
-
-        if (!$ip) {
-            $result['error'] = 'No IP address configured for this router. Run the provision script first.';
-            return response()->json($result);
+        $host = $router->getNasIp();
+        if (!$host) {
+            return response()->json([
+                'status' => 'unreachable',
+                'message' => 'Router IP is not configured.',
+            ]);
         }
 
-        try {
-            // RouterOS 7.x REST API is available on the www service port (default 80)
-            // at /rest/* endpoints. We try port 80 first, then 443.
-            $baseUrl  = "http://{$ip}:{$apiPort}";
-            $http     = Http::withBasicAuth($apiUser, $apiPass)
-                            ->timeout(5)
-                            ->withoutVerifying(); // skip SSL for VPN connections
+        $result = $connectionService->test(
+            $host,
+            (int) ($router->api_port ?? 8728),
+            $credentials['username'],
+            $credentials['password'],
+        );
 
-            // Fetch system resource
-            $response = $http->get("{$baseUrl}/rest/system/resource");
+        $router->update([
+            'status' => $result['status'],
+            'last_checked_at' => now(),
+            'model' => $result['data']['model'] ?? $router->model,
+            'routeros_version' => $result['data']['version'] ?? $router->routeros_version,
+            'router_identity' => $result['data']['identity'] ?? $router->router_identity,
+            'domain_name' => $result['data']['domain_name'] ?? $router->domain_name,
+        ]);
 
-            if ($response->successful()) {
-                $data = $response->json();
-                $result['api_reachable']   = true;
-                $result['online']          = true;
-                $result['board_name']      = $data['board-name']   ?? null;
-                $result['uptime']          = $data['uptime']        ?? null;
-                $result['version']         = $data['version']       ?? null;
-                $result['cpu_load']        = isset($data['cpu-load']) ? $data['cpu-load'] . '%' : null;
-                $result['free_memory']     = isset($data['free-memory'])
-                                             ? round($data['free-memory'] / 1048576, 1) . ' MiB free'
-                                             : null;
-
-                // Fetch router identity
-                $identResp = $http->get("{$baseUrl}/rest/system/identity");
-                if ($identResp->successful()) {
-                    $result['router_identity'] = $identResp->json()['name'] ?? null;
-                }
-
-                // Fetch MAC address of the WAN interface for WinBox column
-                $wanIface  = $router->wan_interface ?: 'ether1';
-                $ifResp    = $http->get("{$baseUrl}/rest/interface", [
-                    'name' => $wanIface,
-                ]);
-                if ($ifResp->successful()) {
-                    $interfaces = $ifResp->json();
-                    if (!empty($interfaces)) {
-                        $iface = is_array($interfaces[0] ?? null) ? $interfaces[0] : $interfaces;
-                        $result['mac_address'] = $iface['mac-address'] ?? null;
-                    }
-                }
-
-                // If MAC found, save it to the router record for persistent display
-                if ($result['mac_address'] && $router->mac_address !== $result['mac_address']) {
-                    $router->update(['mac_address' => $result['mac_address']]);
-                }
-
-                // Save board name and version back to DB if changed
-                $updates = [];
-                if ($result['board_name'] && $router->model !== $result['board_name']) {
-                    $updates['model'] = $result['board_name'];
-                }
-                if ($result['version'] && $router->routeros_version !== $result['version']) {
-                    $updates['routeros_version'] = $result['version'];
-                }
-                if (!empty($updates)) {
-                    $router->update($updates);
-                }
-
-            } else {
-                $result['error'] = 'Router API responded with HTTP ' . $response->status()
-                                 . '. Check credentials or ensure the www service is enabled on the router.';
-            }
-        } catch (\Exception $e) {
-            $result['online'] = false;
-            $result['error']  = 'Could not connect: ' . $e->getMessage();
-        }
-
-        return response()->json($result);
+        return response()->json([
+            'status' => $result['status'],
+            'message' => $result['message'],
+        ]);
     }
 
     public function configureRouter(Request $request, Router $router)
@@ -689,28 +610,24 @@ class RouterController extends Controller
      */
     public function pingStatus(Router $router)
     {
-        $ip      = $router->vpn_ip ?: $router->wan_ip;
-        $apiPort = $router->api_port ?? 80;
-        $apiUser = $router->api_username ?? 'admin';
-        $apiPass = $router->api_password ?? '';
+        return response()->json([
+            'status' => $router->status ?? 'unreachable',
+            'last_checked_at' => optional($router->last_checked_at)->toIso8601String(),
+        ]);
+    }
 
-        if (!$ip) {
-            return response()->json(['online' => false]);
-        }
-
-        try {
-            $response = Http::withBasicAuth($apiUser, $apiPass)
-                            ->timeout(3)
-                            ->withoutVerifying()
-                            ->get("http://{$ip}:{$apiPort}/rest/system/identity");
-
-            return response()->json([
-                'online'   => $response->successful(),
-                'identity' => $response->successful() ? ($response->json()['name'] ?? null) : null,
-            ]);
-        } catch (\Exception $e) {
-            return response()->json(['online' => false]);
-        }
+    public function statuses()
+    {
+        return response()->json(
+            Router::query()
+                ->orderBy('name')
+                ->get(['id', 'status', 'last_checked_at'])
+                ->map(fn (Router $router) => [
+                    'id' => $router->id,
+                    'status' => $router->status ?? 'unreachable',
+                    'last_checked_at' => optional($router->last_checked_at)->toIso8601String(),
+                ])
+        );
     }
 
     protected function syncNas(Router $router): void
@@ -784,5 +701,14 @@ class RouterController extends Controller
             ]);
             return $e->getMessage();
         }
+    }
+
+    protected function autoConfigure(Router $router): void
+    {
+        // TODO: enable router auto-configure in a future release.
+        // Planned flow:
+        // 1) Connect to RouterOS API
+        // 2) Push identity, DNS, PPPoE and Hotspot baseline
+        // 3) Register/verify RADIUS AAA settings
     }
 }

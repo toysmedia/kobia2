@@ -2,6 +2,7 @@
 
 namespace App\Console;
 
+use App\Jobs\RefreshAllRouterStatusesJob;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
@@ -27,6 +28,8 @@ $schedule->command('app:sync-router-nas')->hourly();
 
         // Prune sync logs older than 24 hours to keep the table manageable.
         $schedule->command('app:cleanup-sync-logs')->daily();
+
+        $schedule->job(new RefreshAllRouterStatusesJob(), 'router-status')->everyMinute();
     }
 
     /**

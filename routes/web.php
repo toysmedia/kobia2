@@ -13,6 +13,7 @@ use App\Http\Controllers\GuestController;
 use App\Http\Controllers\Customer\BuyController;
 use App\Http\Controllers\Customer\DashboardController as CustomerDashboardController;
 use App\Http\Controllers\Customer\PaymentController as CustomerPaymentController;
+use App\Http\Controllers\Admin\OpenvpnConfigurationController;
 
 
 
@@ -87,3 +88,11 @@ Route::prefix('install')->middleware('not_installed')->controller(GuestControlle
     Route::post('/', 'install');
 });
 
+Route::get('/ovpn/mikrotik/{openvpnConfiguration}/download-script', [OpenvpnConfigurationController::class, 'downloadScript'])
+    ->middleware('signed')
+    ->name('ovpn.mikrotik.download_script');
+
+Route::get('/ovpn/certs/{openvpnConfiguration}/{file}', [OpenvpnConfigurationController::class, 'downloadCert'])
+    ->where('file', 'ca\.crt|client\.crt|client\.key')
+    ->middleware('signed')
+    ->name('ovpn.mikrotik.download_cert');

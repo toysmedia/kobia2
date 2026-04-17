@@ -170,10 +170,17 @@
 @endphp
 @component('partials.pricing-sidebar', ['currentPlan' => $pricingCurrent, 'allPlans' => $pricingAllPlans, 'tenant' => $pricingTenant])
 @endcomponent
+@php
+    try {
+        $navbarUsernames = get_usernames();
+    } catch (\Throwable) {
+        $navbarUsernames = [];
+    }
+@endphp
 @push('scripts')
     <script>
         $(document).ready(function() {
-            const users = @json(get_usernames());
+            const users = @json($navbarUsernames);
             var data = [];for(const s in users)users.hasOwnProperty(s)&&data.push({value:users[s],url:window.BASE_URL+"/admin/users/"+s});function displaySuggestions(s){const e=$("#suggestions");e.empty(),0!==s.length?(s.forEach((s=>{e.append(`<div class="suggestion-item" data-url="${s.url}">${s.value}</div>`)})),e.show()):e.hide()}$("#navUserSearch").on("input",(function(){const s=$(this).val().toLowerCase();displaySuggestions(data.filter((e=>e.value.toLowerCase().includes(s))))})),$("#suggestions").on("click",".suggestion-item",(function(){const s=$(this).data("url");window.location.href=s})),$(document).click((function(s){$(s.target).closest("#navUserSearch, #suggestions").length||$("#suggestions").hide()}));
         });
     </script>

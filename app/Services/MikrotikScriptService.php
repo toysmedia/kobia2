@@ -171,26 +171,8 @@ class MikrotikScriptService
         $lines[] = "/interface detect-internet set detect-interface-list=all internet-interface-list=all";
         $lines[] = "";
 
-        // 2. Certificate download
-        $lines[] = ":execute script=\"/tool fetch url=\\\"https://{$billingDomainS}/api/router-certs/{$refCode}/ca.crt\\\" dst-path={$caFilename}\"";
-        $lines[] = ":execute script=\"/tool fetch url=\\\"https://{$billingDomainS}/api/router-certs/{$refCode}/router.crt\\\" dst-path={$routerCertFilename}\"";
-        $lines[] = ":execute script=\"/tool fetch url=\\\"https://{$billingDomainS}/api/router-certs/{$refCode}/router.key\\\" dst-path={$routerKeyFilename}\"";
-
-        $certDownloadTimeout = (int) config('mikrotik.cert_download_timeout', 120);
-        $lines[] = ":local certReady false; :local certWait 0; :while (\$certReady != true && \$certWait < {$certDownloadTimeout}) do={ :if ([:len [/file find name={$caFilename}]] > 0 && [:len [/file find name={$routerCertFilename}]] > 0 && [:len [/file find name={$routerKeyFilename}]] > 0) do={ :set certReady true } else={ :delay 2s; :set certWait (\$certWait + 2) } }";
-        $lines[] = ":if (\$certReady != true) do={ :log error \"Provisioning: cert files not downloaded after {$certDownloadTimeout}s\" }";
-        $lines[] = ":delay 2s";
-        $lines[] = "";
-
-        $lines[] = ":execute script=\"/certificate import file-name={$caFilename} passphrase=\\\"\\\"\"";
-        $lines[] = ":delay 3s";
-        $lines[] = ":do { /certificate set [find name={$caCertName}] trusted=yes } on-error={}";
-        $lines[] = ":execute script=\"/certificate import file-name={$routerCertFilename} passphrase=\\\"\\\"\"";
-        $lines[] = ":delay 3s";
-        $lines[] = ":execute script=\"/certificate import file-name={$routerKeyFilename} passphrase=\\\"\\\"\"";
-        $lines[] = ":delay 3s";
-        $lines[] = ":do { /certificate settings set crl-download=yes crl-use=yes } on-error={}";
-        $lines[] = "";
+        // 2. Certificate download/import intentionally excluded from router provisioning script.
+        // Certificates are handled by OpenVPN configuration setup flow.
 
         // 3. RADIUS Client
         $lines[] = ":do { /radius remove [find address={$radiusServerIp}] } on-error={}";

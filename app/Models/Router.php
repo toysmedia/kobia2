@@ -9,10 +9,29 @@ use Illuminate\Support\Facades\Log;
 class Router extends Model
 {
     use HasFactory, SoftDeletes;
-    protected $guarded = ['id'];
+    protected $fillable = [
+        'name',
+        'connection_type',
+        'wan_ip',
+        'vpn_ip',
+        'radius_secret',
+        'shortname',
+        'api_port',
+        'api_username',
+        'api_password',
+        'model',
+        'routeros_version',
+        'router_identity',
+        'domain_name',
+        'notes',
+        'is_active',
+        'status',
+        'last_checked_at',
+    ];
 
     protected $casts = [
         'last_heartbeat_at' => 'datetime',
+        'last_checked_at' => 'datetime',
     ];
 
     public function subscribers()
@@ -90,21 +109,21 @@ class Router extends Model
      */
     public function isHotspot(): bool
     {
-        // Check if service_mode contains 'hotspot' and not PPPoE
-        // or if it's specifically a hotspot-only router
-        if (isset($this->service_mode)) {
-            return str_contains($this->service_mode, 'hotspot') 
-                && !str_contains($this->service_mode, 'pppoe');
-        }
-        
-        // Alternative logic based on bridge names
-        return !empty($this->hotspot_bridge_name) && empty($this->pppoe_bridge_name);
+        return ($this->connection_type ?? '') === 'hotspot';
     }
     public function isVpn(): bool
 {
-    // Determine based on your router data
-    // Example: check a 'type' column or 'vpn_enabled' flag
-    return $this->type === 'vpn' || ($this->vpn_enabled ?? false);
+    return in_array($this->connection_type, ['vpn', 'through_openvpn'], true);
 }
+
+    public function supportsApi(): bool
+    {
+        return !$this->isHotspot();
+    }
+
+    public function getNasIp(): ?string
+    {
+        return $this->isVpn() ? ($this->vpn_ip ?: $this->wan_ip) : ($this->wan_ip ?: $this->vpn_ip);
+    }
     
 }
